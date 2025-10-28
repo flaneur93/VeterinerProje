@@ -446,7 +446,7 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
     name: "",
     surname: "",
     gender: "",
-    birthDate: "25.10.1990",
+    birthDate: "10.10.1995",
     gsm: "",
     email: "",
     contactName: "",
@@ -464,6 +464,7 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
     apartmentNo: "",
   };
   type AddressForm = typeof initialAddress;
+  type SavedAddress = AddressForm & { id: string };
 
   const genderOptions = [
     { value: "female", label: "Kadin" },
@@ -475,6 +476,8 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
   const [errors, setErrors] = React.useState<Partial<Record<FormKey, string>>>({});
   const [addressModalOpen, setAddressModalOpen] = React.useState(false);
   const [addressForm, setAddressForm] = React.useState<AddressForm>(initialAddress);
+  const [addressErrors, setAddressErrors] = React.useState<Partial<Record<keyof AddressForm, string>>>({});
+  const [addresses, setAddresses] = React.useState<SavedAddress[]>([]);
 
   const provinceOptions = [
     { value: "istanbul", label: "Istanbul" },
@@ -498,6 +501,42 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
       { value: "konak", label: "Konak" },
     ],
   };
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem("veteriner-addresses");
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        setAddresses(
+          parsed
+            .filter(
+              (item): item is SavedAddress =>
+                item &&
+                typeof item === "object" &&
+                "id" in item &&
+                typeof item.id === "string"
+            )
+            .map((item) => ({
+              ...initialAddress,
+              ...item,
+            }))
+        );
+      }
+    } catch (error) {
+      console.error("Adresler yüklenemedi:", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem("veteriner-addresses", JSON.stringify(addresses));
+    } catch (error) {
+      console.error("Adresler kaydedilemedi:", error);
+    }
+  }, [addresses]);
 
   const inputClass =
     "h-11 w-full rounded-2xl border border-[#d9cfeb] bg-white/90 px-4 text-sm text-[#5b5171] placeholder:text-[#a8a1bf] focus:border-[#a78fd3] focus:outline-none focus:ring-2 focus:ring-[#d9cef3]/70";
@@ -707,6 +746,34 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
   const errorText = (field: FormKey) =>
     errors[field] ? <p className="mt-1 text-xs font-medium text-[#d46a6a]">{errors[field]}</p> : null;
 
+  const addressInputClass = (field: keyof AddressForm) =>
+    `${inputClass}${addressErrors[field] ? ` ${errorClass}` : ""}`;
+  const addressErrorText = (field: keyof AddressForm) =>
+    addressErrors[field] ? (
+      <p className="mt-1 text-xs font-medium text-[#d46a6a]">{addressErrors[field]}</p>
+    ) : null;
+
+  const validateAddressForm = (data: AddressForm) => {
+    const errs: Partial<Record<keyof AddressForm, string>> = {};
+    if (!data.title.trim()) errs.title = "Adres basligi zorunlu.";
+    if (!data.province.trim()) errs.province = "Il secin.";
+    if (!data.district.trim()) errs.district = "Ilce secin.";
+    if (!data.neighborhood.trim()) errs.neighborhood = "Mahalle veya koy girin.";
+    if (!data.street.trim()) errs.street = "Cadde veya sokak girin.";
+    if (!data.buildingNo.trim()) errs.buildingNo = "Bina numarasi girin.";
+    return errs;
+  };
+
+  const formatAddressLine = (address: SavedAddress) => {
+    const parts = [
+      [address.neighborhood, address.street].filter(Boolean).join(" "),
+      address.buildingNo ? `No: ${address.buildingNo}` : null,
+      address.apartmentNo ? `Daire: ${address.apartmentNo}` : null,
+      [address.district, address.province].filter(Boolean).join(" / "),
+    ];
+    return parts.filter(Boolean).join(", ");
+  };
+
   const updateAddressField = (field: keyof AddressForm, value: string) => {
     setAddressForm((prev) => {
       const next = { ...prev, [field]: value };
@@ -715,16 +782,57 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
       }
       return next;
     });
+    setAddressErrors((prev) => {
+      if (!prev[field] && !(field === "province" && prev.district)) return prev;
+      const next = { ...prev };
+      delete next[field];
+      if (field === "province") {
+        delete next.district;
+      }
+      return next;
+    });
   };
 
   const closeAddressModal = () => {
     setAddressModalOpen(false);
+    setAddressErrors({});
+  };
+
+  const deleteAddress = (id: string) => {
+    const target = addresses.find((address) => address.id === id);
+    if (!target) return;
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(
+        `"${target.title}" adresini silmek istediğinize emin misiniz?`
+      );
+      if (!confirmed) return;
+    }
+    setAddresses((prev) => prev.filter((address) => address.id !== id));
   };
 
   const saveAddress = () => {
-    console.log("Yeni adres kaydedildi", addressForm);
-    setAddressModalOpen(false);
+    const sanitized: AddressForm = {
+      title: addressForm.title.trim(),
+      province: addressForm.province.trim(),
+      district: addressForm.district.trim(),
+      neighborhood: addressForm.neighborhood.trim(),
+      street: addressForm.street.trim(),
+      buildingNo: addressForm.buildingNo.trim(),
+      apartmentNo: addressForm.apartmentNo.trim(),
+    };
+    const validation = validateAddressForm(sanitized);
+    if (Object.keys(validation).length > 0) {
+      setAddressErrors(validation);
+      return;
+    }
+    const newAddress: SavedAddress = {
+      ...sanitized,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    };
+    setAddresses((prev) => [...prev, newAddress]);
+    setAddressErrors({});
     setAddressForm(() => ({ ...initialAddress }));
+    setAddressModalOpen(false);
   };
 
   return (
@@ -978,9 +1086,41 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
                   </button>
                 </div>
                 <div className="px-6 pt-6">
-                  <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
-                    Adres bilgisi bulunmuyor. Yeni bir adres eklemek icin sag ustteki artiya tiklayin.
-                  </div>
+                  {addresses.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
+                      Adres bilgisi bulunmuyor. Yeni bir adres eklemek icin sag ustteki artiya tiklayin.
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-2xl border border-[#d9cfeb] bg-white">
+                      <table className="w-full text-sm">
+                        <thead className="bg-[#f7f3ff] text-[#5b5171]">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold">Adres Basligi</th>
+                            <th className="px-4 py-3 text-left font-semibold">Adres</th>
+                            <th className="px-3 py-3 text-right font-semibold"> </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {addresses.map((address) => (
+                            <tr key={address.id} className="border-t border-[#ebe4f6] text-[#5b5171]">
+                              <td className="px-4 py-3 font-medium">{address.title}</td>
+                              <td className="px-4 py-3">{formatAddressLine(address)}</td>
+                              <td className="px-3 py-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => deleteAddress(address.id)}
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-[#a988be] transition hover:bg-[#f2ecfc] hover:text-[#7a5fa0]"
+                                  aria-label="Adresi sil"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -1017,71 +1157,78 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
                       <div>
                         <label className={labelClass}>Adres Basligi</label>
                         <input
-                          className={inputClass}
+                          className={addressInputClass("title")}
                           placeholder="Orn. Ev"
                           value={addressForm.title}
                           onChange={(e) => updateAddressField("title", e.target.value)}
                         />
+                        {addressErrorText("title")}
                       </div>
                       <div>
                         <label className={labelClass}>Il</label>
                         <ThemedSelect
                           id="address-province"
-                          className={inputClass}
+                          className={addressInputClass("province")}
                           value={addressForm.province}
                           onChange={(val) => updateAddressField("province", val)}
                           placeholder="Il secin"
                           options={provinceOptions}
                         />
+                        {addressErrorText("province")}
                       </div>
                       <div>
                         <label className={labelClass}>Ilce</label>
                         <ThemedSelect
                           id="address-district"
-                          className={inputClass}
+                          className={addressInputClass("district")}
                           value={addressForm.district}
                           onChange={(val) => updateAddressField("district", val)}
                           placeholder={addressForm.province ? "Ilce secin" : "Once il secin"}
                           options={districtList}
                           disabled={!addressForm.province}
                         />
+                        {addressErrorText("district")}
                       </div>
                       <div>
                         <label className={labelClass}>Mahalle / Koy</label>
                         <input
-                          className={inputClass}
+                          className={addressInputClass("neighborhood")}
                           placeholder="Mahalle veya koy"
                           value={addressForm.neighborhood}
                           onChange={(e) => updateAddressField("neighborhood", e.target.value)}
                         />
+                        {addressErrorText("neighborhood")}
                       </div>
                       <div>
                         <label className={labelClass}>Cadde / Sokak</label>
                         <input
-                          className={inputClass}
+                          className={addressInputClass("street")}
                           placeholder="Cadde veya sokak"
                           value={addressForm.street}
                           onChange={(e) => updateAddressField("street", e.target.value)}
                         />
+                        {addressErrorText("street")}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className={labelClass}>Bina No</label>
                           <input
-                            className={inputClass}
+                            className={addressInputClass("buildingNo")}
                             placeholder="No"
                             value={addressForm.buildingNo}
                             onChange={(e) => updateAddressField("buildingNo", e.target.value)}
                           />
+                          {addressErrorText("buildingNo")}
                         </div>
                         <div>
                           <label className={labelClass}>Daire No</label>
                           <input
-                            className={inputClass}
+                            className={addressInputClass("apartmentNo")}
                             placeholder="No"
                             value={addressForm.apartmentNo}
                             onChange={(e) => updateAddressField("apartmentNo", e.target.value)}
                           />
+                          {addressErrorText("apartmentNo")}
                         </div>
                       </div>
                     </div>
