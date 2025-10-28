@@ -1,136 +1,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  LayoutGrid,
-  SearchIcon,
-  Bell,
-  Users,
-  Calendar,
-  Plus,
-  X,
-  ChevronDown,
-} from "@/icons/lucide";
+import { LayoutGrid, SearchIcon, Bell, Users, Calendar, Plus, X } from "@/icons/lucide";
+import { BubbleHeader } from "@/components/ui/bubble-header";
+import Input from "@/components/ui/input";
+import Textarea from "@/components/ui/textarea";
+import { IconInput } from "@/components/ui/icon-input";
+import ThemedSelect from "@/components/ui/themed-select";
 
 // Copied helper to preserve original UI/behavior
-function ThemedSelect({
-  id,
-  value,
-  onChange,
-  placeholder,
-  options,
-  disabled,
-  className,
-}: {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  options: { value: string; label: string; disabled?: boolean }[];
-  disabled?: boolean;
-  className: string;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const buttonRef = React.useRef<HTMLButtonElement | null>(null);
-  const listRef = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    if (!open) return;
-    const handlePointer = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (buttonRef.current?.contains(target)) return;
-      if (listRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        buttonRef.current?.focus();
-      }
-    };
-    document.addEventListener("mousedown", handlePointer);
-    document.addEventListener("touchstart", handlePointer);
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.removeEventListener("mousedown", handlePointer);
-      document.removeEventListener("touchstart", handlePointer);
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [open]);
-
-  const selected = options.find((opt) => opt.value === value);
-  const displayLabel = selected?.label ?? placeholder;
-  const optionList = options.filter((opt) => !opt.disabled);
-
-  const toggle = () => {
-    if (disabled) return;
-    setOpen((prev) => !prev);
-  };
-
-  const pick = (nextValue: string) => {
-    onChange(nextValue);
-    setOpen(false);
-    buttonRef.current?.focus();
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        id={id}
-        ref={buttonRef}
-        className={`${className} flex items-center justify-between gap-3 text-left ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
-        onClick={toggle}
-        onKeyDown={(event) => {
-          if (disabled) return;
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggle();
-          }
-          if (event.key === "Escape") {
-            setOpen(false);
-          }
-        }}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        disabled={disabled}
-      >
-        <span className={value ? "text-[#5b5171]" : "text-[#a8a1bf]"}>{displayLabel}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180 text-[#8c74c0]" : "text-[#a8a1bf]"}`} />
-      </button>
-      {open && !disabled ? (
-        <div
-          ref={listRef}
-          role="listbox"
-          tabIndex={-1}
-          className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#d9cfeb] bg-white shadow-[0_18px_35px_rgba(137,115,180,0.25)]"
-        >
-          <div className="max-h-48 overflow-y-auto py-1">
-            {optionList.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-[#a8a1bf]">Secenek bulunmuyor</div>
-            ) : (
-              optionList.map((opt, idx) => (
-                <button
-                  key={opt.value}
-                  role="option"
-                  type="button"
-                  className={`flex w-full items-center justify-between px-4 py-2 text-sm transition ${
-                    opt.value === value ? "bg-[#f2ecfc] text-[#5b5171] font-semibold" : "text-[#5b5171] hover:bg-[#f7f3ff]"
-                  }`}
-                  onClick={() => pick(opt.value)}
-                  data-index={idx}
-                >
-                  {opt.label}
-                  {opt.value === value ? <span className="text-xs text-[#8c74c0]">Secildi</span> : null}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 export type NewCustomerFormProps = {
   onClose: () => void;
@@ -583,9 +460,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
       <div className="flex-1 overflow-y-auto px-8 py-8">
         <div className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
           <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 p-8 shadow-[0_24px_45px_rgba(182,167,209,0.2)]">
-            <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-              Yeni Musteri Kayit
-            </div>
+            <BubbleHeader>Yeni Musteri Kayit</BubbleHeader>
             <div className="mb-6 flex justify-end">
               <Users className="h-5 w-5 text-[#8c74c0]" />
             </div>
@@ -594,17 +469,15 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 <label className={labelClass} htmlFor={identityInputId}>
                   {identityLabel} <span className="text-[#c45a71]">*</span>
                 </label>
-                <div className="relative">
-                  <input
-                    id={identityInputId}
-                    className={inputClassFor("identity", "pr-12")}
-                    placeholder={identityPlaceholder}
-                    inputMode={isForeign ? "text" : "numeric"}
-                    value={form.identity}
-                    onChange={(e) => handleIdentityChange(e.target.value)}
-                  />
-                  <Users className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#b1a5cc]" />
-                </div>
+                <IconInput
+                  icon={<Users className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#b1a5cc]" />}
+                  id={identityInputId}
+                  className={inputClassFor("identity", "pr-12")}
+                  placeholder={identityPlaceholder}
+                  inputMode={isForeign ? "text" : "numeric"}
+                  value={form.identity}
+                  onChange={(e) => handleIdentityChange(e.target.value)}
+                />
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                   <p
                     className={`text-[11px] font-medium uppercase tracking-[0.08em] ${
@@ -638,26 +511,14 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                   <label className={labelClass} htmlFor={nameInputId}>
                     Adi <span className="text-[#c45a71]">*</span>
                   </label>
-                  <input
-                    id={nameInputId}
-                    className={inputClassFor("name")}
-                    placeholder="Ad"
-                    value={form.name}
-                    onChange={(e) => updateField("name", sanitizeLetters(e.target.value))}
-                  />
+                  <Input id={nameInputId} className={inputClassFor("name")} placeholder="Ad" value={form.name} onChange={(e) => updateField("name", sanitizeLetters(e.target.value))} />
                   {errorText("name")}
                 </div>
                 <div>
                   <label className={labelClass} htmlFor={surnameInputId}>
                     Soyadi <span className="text-[#c45a71]">*</span>
                   </label>
-                  <input
-                    id={surnameInputId}
-                    className={inputClassFor("surname")}
-                    placeholder="Soyad"
-                    value={form.surname}
-                    onChange={(e) => updateField("surname", sanitizeLetters(e.target.value))}
-                  />
+                  <Input id={surnameInputId} className={inputClassFor("surname")} placeholder="Soyad" value={form.surname} onChange={(e) => updateField("surname", sanitizeLetters(e.target.value))} />
                   {errorText("surname")}
                 </div>
               </div>
@@ -681,17 +542,15 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                   <label className={labelClass} htmlFor={birthDateInputId}>
                     Dogum Tarihi
                   </label>
-                  <div className="relative">
-                    <input
-                      id={birthDateInputId}
-                      className={inputClassFor("birthDate", "pr-12")}
-                      value={form.birthDate}
-                      onChange={(e) => handleBirthDateChange(e.target.value)}
-                      inputMode="numeric"
-                      placeholder="gg.aa.yyyy"
-                    />
-                    <Calendar className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b1a5cc]" />
-                  </div>
+                  <IconInput
+                    icon={<Calendar className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b1a5cc]" />}
+                    id={birthDateInputId}
+                    className={inputClassFor("birthDate", "pr-12")}
+                    value={form.birthDate}
+                    onChange={(e) => handleBirthDateChange(e.target.value)}
+                    inputMode="numeric"
+                    placeholder="gg.aa.yyyy"
+                  />
                   {errorText("birthDate")}
                 </div>
               </div>
@@ -701,27 +560,14 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                   <label className={labelClass} htmlFor={gsmInputId}>
                     GSM No <span className="text-[#c45a71]">*</span>
                   </label>
-                  <input
-                    id={gsmInputId}
-                    className={inputClassFor("gsm")}
-                    placeholder="5XX XXX XX XX"
-                    value={form.gsm}
-                    inputMode="numeric"
-                    onChange={(e) => updateField("gsm", limitDigits(e.target.value, 10))}
-                  />
+                  <Input id={gsmInputId} className={inputClassFor("gsm")} placeholder="5XX XXX XX XX" value={form.gsm} inputMode="numeric" onChange={(e) => updateField("gsm", limitDigits(e.target.value, 10))} />
                   {errorText("gsm")}
                 </div>
                 <div>
                   <label className={labelClass} htmlFor={emailInputId}>
                     E-mail
                   </label>
-                  <input
-                    id={emailInputId}
-                    className={inputClassFor("email")}
-                    placeholder="ornek@email.com"
-                    value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                  />
+                  <Input id={emailInputId} className={inputClassFor("email")} placeholder="ornek@email.com" value={form.email} onChange={(e) => updateField("email", e.target.value)} />
                   {errorText("email")}
                 </div>
               </div>
@@ -731,27 +577,14 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                   <label className={labelClass} htmlFor={contactNameId}>
                     Yetkili Ad Soyad
                   </label>
-                  <input
-                    id={contactNameId}
-                    className={inputClassFor("contactName")}
-                    placeholder="Ad Soyad"
-                    value={form.contactName}
-                    onChange={(e) => updateField("contactName", sanitizeLetters(e.target.value))}
-                  />
+                  <Input id={contactNameId} className={inputClassFor("contactName")} placeholder="Ad Soyad" value={form.contactName} onChange={(e) => updateField("contactName", sanitizeLetters(e.target.value))} />
                   {errorText("contactName")}
                 </div>
                 <div>
                   <label className={labelClass} htmlFor={contactGsmId}>
                     Yetkili GSM
                   </label>
-                  <input
-                    id={contactGsmId}
-                    className={inputClassFor("contactGsm")}
-                    placeholder="5XX XXX XX XX"
-                    value={form.contactGsm}
-                    inputMode="numeric"
-                    onChange={(e) => updateField("contactGsm", limitDigits(e.target.value, 10))}
-                  />
+                  <Input id={contactGsmId} className={inputClassFor("contactGsm")} placeholder="5XX XXX XX XX" value={form.contactGsm} inputMode="numeric" onChange={(e) => updateField("contactGsm", limitDigits(e.target.value, 10))} />
                   {errorText("contactGsm")}
                 </div>
                 <div className="rounded-2xl border border-[#d9cfeb] bg-[#f8f6fe] px-4 py-3">
@@ -775,13 +608,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 <label className={labelClass} htmlFor={noteInputId}>
                   Not
                 </label>
-                <textarea
-                  id={noteInputId}
-                  className={textareaClassFor("note")}
-                  placeholder="Not ekleyin..."
-                  value={form.note}
-                  onChange={(e) => updateField("note", e.target.value)}
-                />
+                <Textarea id={noteInputId} className={textareaClassFor("note")} placeholder="Not ekleyin..." value={form.note} onChange={(e) => updateField("note", e.target.value)} />
               </div>
             </div>
           </section>
@@ -789,9 +616,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
           <div className="relative">
             <div className={`space-y-6 transition ${addressModalOpen ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen}>
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
-                <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-                  Adres
-                </div>
+            <BubbleHeader>Adres</BubbleHeader>
                 <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
                   <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
                     <span className="font-semibold text-[#5e4b73]">Baslik</span>
@@ -845,9 +670,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
               </section>
 
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
-                <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-                  Kayitli Hasta
-                </div>
+            <BubbleHeader>Kayitli Hasta</BubbleHeader>
                 <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
                   <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
                     <span className="font-semibold text-[#5e4b73]">Cins</span>
@@ -869,9 +692,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
             {addressModalOpen ? (
               <div className="absolute inset-0 z-10 flex bg-[#edeff7]">
                 <div className="relative flex h-full w-full flex-col rounded-[32px] border border-[#cdbbe3] bg-white/98 shadow-[0_24px_45px_rgba(182,167,209,0.28)]">
-                  <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-                    Yeni Adres
-                  </div>
+                  <BubbleHeader>Yeni Adres</BubbleHeader>
                   <div className="flex-1 overflow-y-auto px-6 py-8">
                     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
                       <div>
