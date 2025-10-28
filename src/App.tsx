@@ -59,14 +59,16 @@ const menu = [
 ];
 
 type MenuItem = (typeof menu)[number];
+type MenuKey = MenuItem["key"];
 
 type SideMenuItemProps = {
   item: MenuItem;
-  onClick?: (key: string) => void;
+  onClick?: (key: MenuKey) => void;
   collapsed?: boolean;
+  active: boolean;
 };
 
-function SideMenuItem({ item, onClick, collapsed }: SideMenuItemProps) {
+function SideMenuItem({ item, onClick, collapsed, active }: SideMenuItemProps) {
   const Icon = item.icon;
   const Trailing = item.trailing as React.ComponentType<React.SVGProps<SVGSVGElement>> | undefined;
 
@@ -100,12 +102,12 @@ function SideMenuItem({ item, onClick, collapsed }: SideMenuItemProps) {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
           className={`flex h-14 w-14 items-center justify-center rounded-l-none rounded-r-2xl transition-colors ${
-            item.active ? "text-white" : "text-[#565e6c] hover:bg-white"
+            active ? "text-white" : "text-[#565e6c] hover:bg-white"
           }`}
-          style={item.active ? { backgroundColor: "#997ca3" } : undefined}
+          style={active ? { backgroundColor: "#997ca3" } : undefined}
         >
-          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.active ? "bg-transparent" : "bg-transparent"}`}>
-            <Icon className={`h-8 w-8 ${item.active ? "text-white" : "text-[#6B6E7E]"}`} />
+          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${active ? "bg-transparent" : "bg-transparent"}`}>
+            <Icon className={`h-8 w-8 ${active ? "text-white" : "text-[#6B6E7E]"}`} />
           </div>
         </button>
         {hover && flyRect
@@ -119,10 +121,10 @@ function SideMenuItem({ item, onClick, collapsed }: SideMenuItemProps) {
               >
                 <div
                   className={`mr-3 ml-1 flex h-11 w-11 items-center justify-center rounded-2xl ${
-                    item.active ? "bg-[#997ca3]" : "bg-transparent"
+                    active ? "bg-[#997ca3]" : "bg-transparent"
                   }`}
                 >
-                  <Icon className={`h-8 w-8 ${item.active ? "text-white" : "text-[#6B6E7E]"}`} />
+                  <Icon className={`h-8 w-8 ${active ? "text-white" : "text-[#6B6E7E]"}`} />
                 </div>
                 <span className="whitespace-nowrap text-[22px] font-medium leading-none text-[#565e6c]">{item.label}</span>
               </button>,
@@ -138,22 +140,22 @@ function SideMenuItem({ item, onClick, collapsed }: SideMenuItemProps) {
     <button
       onClick={() => onClick?.(item.key)}
       className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-lg transition ${
-        item.active ? "text-white" : "text-[#565e6c] hover:bg-[#ECE9F1]"
+        active ? "text-white" : "text-[#565e6c] hover:bg-[#ECE9F1]"
       }`}
-      style={item.active ? { backgroundColor: "#997ca3" } : undefined}
+      style={active ? { backgroundColor: "#997ca3" } : undefined}
     >
-      <Icon className={`h-6 w-6 ${item.active ? "text-white" : "text-[#6B6E7E]"}`} />
+      <Icon className={`h-6 w-6 ${active ? "text-white" : "text-[#6B6E7E]"}`} />
       <span className="flex-1 text-left leading-tight">{item.label}</span>
       {item.badge ? (
         <span
           className={`ml-1 rounded-full px-2 py-0.5 text-[10px] ${
-            item.active ? "bg-white text-[#997ca3]" : "bg-[#E74C3C] text-white"
+            active ? "bg-white text-[#997ca3]" : "bg-[#E74C3C] text-white"
           }`}
         >
           {item.badge}
         </span>
       ) : null}
-      {Trailing ? <Trailing className={`h-4 w-4 ${item.active ? "text-white/90" : "text-[#9AA0AE]"}`} /> : null}
+      {Trailing ? <Trailing className={`h-4 w-4 ${active ? "text-white/90" : "text-[#9AA0AE]"}`} /> : null}
     </button>
   );
 }
@@ -1429,6 +1431,7 @@ function SettingsPanel({ selectedKey, onSelect, onClose }: SettingsPanelProps) {
 }
 
 export default function App() {
+  const [activeMenuKey, setActiveMenuKey] = React.useState<MenuKey>("hasta-kabul");
   const [collapsed, setCollapsed] = React.useState(false);
   const [rightVisible, setRightVisible] = React.useState(true);
   const [rightDockOpen, setRightDockOpen] = React.useState(false);
@@ -1561,8 +1564,10 @@ export default function App() {
                 <SideMenuItem
                   key={m.key}
                   item={m}
+                  active={m.key === activeMenuKey}
                   collapsed={collapsed}
                   onClick={(key) => {
+                    setActiveMenuKey(key);
                     if (key === "yeni-musteri") setWorkspaceView("new-customer");
                   }}
                 />
