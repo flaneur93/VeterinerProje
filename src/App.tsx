@@ -296,6 +296,126 @@ function SimpleCalendar({ value, onChange, onClose }: SimpleCalendarProps) {
   );
 }
 
+function ThemedSelect({
+  id,
+  value,
+  onChange,
+  placeholder,
+  options,
+  disabled,
+  className,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  options: { value: string; label: string; disabled?: boolean }[];
+  disabled?: boolean;
+  className: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement | null>(null);
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (buttonRef.current?.contains(target)) return;
+      if (listRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
+  const selected = options.find((opt) => opt.value === value);
+  const displayLabel = selected?.label ?? placeholder;
+  const optionList = options.filter((opt) => !opt.disabled);
+
+  const toggle = () => {
+    if (disabled) return;
+    setOpen((prev) => !prev);
+  };
+
+  const pick = (nextValue: string) => {
+    onChange(nextValue);
+    setOpen(false);
+    buttonRef.current?.focus();
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        id={id}
+        ref={buttonRef}
+        className={`${className} flex items-center justify-between gap-3 text-left ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+        onClick={toggle}
+        onKeyDown={(event) => {
+          if (disabled) return;
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggle();
+          }
+          if (event.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+      >
+        <span className={value ? "text-[#5b5171]" : "text-[#a8a1bf]"}>{displayLabel}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180 text-[#8c74c0]" : "text-[#a8a1bf]"}`} />
+      </button>
+      {open && !disabled ? (
+        <div
+          ref={listRef}
+          role="listbox"
+          tabIndex={-1}
+          className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#d9cfeb] bg-white shadow-[0_18px_35px_rgba(137,115,180,0.25)]"
+        >
+          <div className="max-h-48 overflow-y-auto py-1">
+            {optionList.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-[#a8a1bf]">Secenek bulunmuyor</div>
+            ) : (
+              optionList.map((opt, idx) => (
+                <button
+                  key={opt.value}
+                  role="option"
+                  type="button"
+                  className={`flex w-full items-center justify-between px-4 py-2 text-sm transition ${
+                    opt.value === value ? "bg-[#f2ecfc] text-[#5b5171] font-semibold" : "text-[#5b5171] hover:bg-[#f7f3ff]"
+                  }`}
+                  onClick={() => pick(opt.value)}
+                  data-index={idx}
+                >
+                  {opt.label}
+                  {opt.value === value ? <span className="text-xs text-[#8c74c0]">Secildi</span> : null}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function NewCustomerForm({ onClose }: { onClose: () => void }) {
   type FormKey =
     | "identity"
@@ -334,9 +454,50 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
     note: "",
   };
 
+  const initialAddress = {
+    title: "",
+    province: "",
+    district: "",
+    neighborhood: "",
+    street: "",
+    buildingNo: "",
+    apartmentNo: "",
+  };
+  type AddressForm = typeof initialAddress;
+
+  const genderOptions = [
+    { value: "female", label: "Kadin" },
+    { value: "male", label: "Erkek" },
+    { value: "other", label: "Diger" },
+  ];
   const [isForeign, setIsForeign] = React.useState(false);
   const [form, setForm] = React.useState<Record<FormKey, string>>(initialForm);
   const [errors, setErrors] = React.useState<Partial<Record<FormKey, string>>>({});
+  const [addressModalOpen, setAddressModalOpen] = React.useState(false);
+  const [addressForm, setAddressForm] = React.useState<AddressForm>(initialAddress);
+
+  const provinceOptions = [
+    { value: "istanbul", label: "Istanbul" },
+    { value: "ankara", label: "Ankara" },
+    { value: "izmir", label: "Izmir" },
+  ];
+  const districtOptions: Record<string, { value: string; label: string }[]> = {
+    istanbul: [
+      { value: "besiktas", label: "Besiktas" },
+      { value: "kadikoy", label: "Kadikoy" },
+      { value: "sisli", label: "Sisli" },
+    ],
+    ankara: [
+      { value: "cankaya", label: "Cankaya" },
+      { value: "kecioren", label: "Kecioren" },
+      { value: "mamak", label: "Mamak" },
+    ],
+    izmir: [
+      { value: "karsiyaka", label: "Karsiyaka" },
+      { value: "bornova", label: "Bornova" },
+      { value: "konak", label: "Konak" },
+    ],
+  };
 
   const inputClass =
     "h-11 w-full rounded-2xl border border-[#d9cfeb] bg-white/90 px-4 text-sm text-[#5b5171] placeholder:text-[#a8a1bf] focus:border-[#a78fd3] focus:outline-none focus:ring-2 focus:ring-[#d9cef3]/70";
@@ -344,14 +505,15 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
     "w-full rounded-2xl border border-[#d9cfeb] bg-white/90 px-4 py-3 text-sm text-[#5b5171] placeholder:text-[#a8a1bf] focus:border-[#a78fd3] focus:outline-none focus:ring-2 focus:ring-[#d9cef3]/70 resize-none min-h-[120px] max-h-[120px]";
   const labelClass = "mb-1.5 block text-[11px] font-semibold text-[#6f6787] tracking-[0.04em] uppercase";
   const errorClass = "border-[#d46a6a] focus:border-[#d46a6a] focus:ring-[#f1b1b1]";
-  const namePattern = /^[A-Za-zÇçÐðÝýÖöÞþÜü\s]+$/;
+  const namePattern = /^[\p{L}\s]+$/u;
   const passportPattern = /^[A-Za-z][A-Za-z0-9]{5,8}$/;
 
   const identityLabel = isForeign ? "Pasaport No" : "TC Kimlik No";
   const identityPlaceholder = isForeign ? "AA1234567" : "00000000000";
+  const districtList = addressForm.province ? districtOptions[addressForm.province] ?? [] : [];
 
   const sanitizeDigits = (value: string) => value.replace(/\D/g, "");
-  const sanitizeLetters = (value: string) => value.replace(/[^A-Za-zÇçÐðÝýÖöÞþÜü\s]/g, "");
+  const sanitizeLetters = (value: string) => value.replace(/[^\p{L}\s]/gu, "");
   const sanitizePassport = (value: string) => value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
   const sanitizeIdentity = (value: string, foreign: boolean) =>
     foreign ? sanitizePassport(value).slice(0, 9) : sanitizeDigits(value).slice(0, 11);
@@ -545,6 +707,26 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
   const errorText = (field: FormKey) =>
     errors[field] ? <p className="mt-1 text-xs font-medium text-[#d46a6a]">{errors[field]}</p> : null;
 
+  const updateAddressField = (field: keyof AddressForm, value: string) => {
+    setAddressForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "province") {
+        next.district = "";
+      }
+      return next;
+    });
+  };
+
+  const closeAddressModal = () => {
+    setAddressModalOpen(false);
+  };
+
+  const saveAddress = () => {
+    console.log("Yeni adres kaydedildi", addressForm);
+    setAddressModalOpen(false);
+    setAddressForm(() => ({ ...initialAddress }));
+  };
+
   return (
     <div className="flex h-full flex-col bg-[#edf0f8]">
       <header className="flex items-center justify-end border-b border-[#d7caed] bg-white/80 px-8 py-4 backdrop-blur">
@@ -657,19 +839,14 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
                   <label className={labelClass} htmlFor={genderSelectId}>
                     Cinsiyet <span className="text-[#c45a71]">*</span>
                   </label>
-                  <select
+                  <ThemedSelect
                     id={genderSelectId}
                     className={inputClassFor("gender")}
                     value={form.gender}
-                    onChange={(e) => updateField("gender", e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Seciniz
-                    </option>
-                    <option value="female">Kadin</option>
-                    <option value="male">Erkek</option>
-                    <option value="other">Diger</option>
-                  </select>
+                    onChange={(val) => updateField("gender", val)}
+                    placeholder="Seciniz"
+                    options={genderOptions}
+                  />
                   {errorText("gender")}
                 </div>
                 <div>
@@ -781,48 +958,147 @@ function NewCustomerForm({ onClose }: { onClose: () => void }) {
             </div>
           </section>
 
-          <div className="space-y-6">
-            <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
-              <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-                Adres
-              </div>
-              <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
-                <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
-                  <span className="font-semibold text-[#5e4b73]">Baslik</span>
-                  <span className="text-[#c3badb]">|</span>
-                  <span className="text-[#8f86a8]">Adres</span>
+          <div className="relative">
+            <div className={`space-y-6 transition ${addressModalOpen ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen}>
+              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
+                <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
+                  Adres
                 </div>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="px-6 pt-6">
-                <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
-                  Adres bilgisi bulunmuyor. Yeni bir adres eklemek icin sag ustteki artiya tiklayin.
+                <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
+                  <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
+                    <span className="font-semibold text-[#5e4b73]">Baslik</span>
+                    <span className="text-[#c3badb]">|</span>
+                    <span className="text-[#8f86a8]">Adres</span>
+                  </div>
+                  <button
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]"
+                    onClick={() => setAddressModalOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
-              </div>
-            </section>
+                <div className="px-6 pt-6">
+                  <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
+                    Adres bilgisi bulunmuyor. Yeni bir adres eklemek icin sag ustteki artiya tiklayin.
+                  </div>
+                </div>
+              </section>
 
-            <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
-              <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
-                Kayitli Hasta
-              </div>
-              <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
-                <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
-                  <span className="font-semibold text-[#5e4b73]">Cins</span>
-                  <span className="text-[#c3badb]">|</span>
-                  <span className="text-[#8f86a8]">Adi</span>
+              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
+                <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
+                  Kayitli Hasta
                 </div>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="px-6 pt-6">
-                <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
-                  Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
+                <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
+                  <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
+                    <span className="font-semibold text-[#5e4b73]">Cins</span>
+                    <span className="text-[#c3badb]">|</span>
+                    <span className="text-[#8f86a8]">Adi</span>
+                  </div>
+                  <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="px-6 pt-6">
+                  <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
+                    Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {addressModalOpen ? (
+              <div className="absolute inset-0 z-10 flex bg-[#edeff7]">
+                <div className="relative flex h-full w-full flex-col rounded-[32px] border border-[#cdbbe3] bg-white/98 shadow-[0_24px_45px_rgba(182,167,209,0.28)]">
+                  <div className="absolute -top-4 left-8 rounded-full border border-[#cdbbe3] bg-[#f2ecfc] px-5 py-1 text-sm font-semibold text-[#5e4b73] shadow-[0_6px_14px_rgba(182,167,209,0.35)]">
+                    Yeni Adres
+                  </div>
+                  <div className="flex-1 overflow-y-auto px-6 py-8">
+                    <div className="mx-auto flex w-full max-w-md flex-col gap-5">
+                      <div>
+                        <label className={labelClass}>Adres Basligi</label>
+                        <input
+                          className={inputClass}
+                          placeholder="Orn. Ev"
+                          value={addressForm.title}
+                          onChange={(e) => updateAddressField("title", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Il</label>
+                        <ThemedSelect
+                          id="address-province"
+                          className={inputClass}
+                          value={addressForm.province}
+                          onChange={(val) => updateAddressField("province", val)}
+                          placeholder="Il secin"
+                          options={provinceOptions}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Ilce</label>
+                        <ThemedSelect
+                          id="address-district"
+                          className={inputClass}
+                          value={addressForm.district}
+                          onChange={(val) => updateAddressField("district", val)}
+                          placeholder={addressForm.province ? "Ilce secin" : "Once il secin"}
+                          options={districtList}
+                          disabled={!addressForm.province}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Mahalle / Koy</label>
+                        <input
+                          className={inputClass}
+                          placeholder="Mahalle veya koy"
+                          value={addressForm.neighborhood}
+                          onChange={(e) => updateAddressField("neighborhood", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Cadde / Sokak</label>
+                        <input
+                          className={inputClass}
+                          placeholder="Cadde veya sokak"
+                          value={addressForm.street}
+                          onChange={(e) => updateAddressField("street", e.target.value)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className={labelClass}>Bina No</label>
+                          <input
+                            className={inputClass}
+                            placeholder="No"
+                            value={addressForm.buildingNo}
+                            onChange={(e) => updateAddressField("buildingNo", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Daire No</label>
+                          <input
+                            className={inputClass}
+                            placeholder="No"
+                            value={addressForm.apartmentNo}
+                            onChange={(e) => updateAddressField("apartmentNo", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="border-t border-[#dcd0eb] px-6 py-4">
+                    <div className="flex justify-center gap-3">
+                      <Button className="px-8" onClick={saveAddress}>
+                        Kaydet
+                      </Button>
+                      <Button variant="outline" className="px-8" onClick={closeAddressModal}>
+                        Iptal
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </section>
+            ) : null}
           </div>
         </div>
 
@@ -1368,5 +1644,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
