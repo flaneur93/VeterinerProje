@@ -709,7 +709,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
             <div className={`space-y-6 transition ${(addressModalOpen || patientModalOpen) ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen || patientModalOpen}>
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Adres</BubbleHeader>
-                <div className="flex items-center justify-end px-6 pt-6">
+                <div className="flex items-center justify-end px-6 pt-1">
                   <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setAddressModalOpen(true)}>
                     <Plus className="h-4 w-4" />
                   </button>
@@ -755,7 +755,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
 
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Kayitli Hasta</BubbleHeader>
-                <div className="flex items-center justify-end px-6 pt-6">
+                <div className="flex items-center justify-end px-6 pt-1">
                   <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setPatientModalOpen(true)}>
                     <Plus className="h-4 w-4" />
                   </button>
