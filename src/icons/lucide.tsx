@@ -174,3 +174,49 @@ export const UserCircle2 = createIcon(
     <path d="M6.5 18.5a7 7 0 0 1 11 0" />
   </>
 );
+
+export const X = createIcon(
+  <>
+    <line x1={6} y1={6} x2={18} y2={18} />
+    <line x1={18} y1={6} x2={6} y2={18} />
+  </>
+);
+
+export const Lock = createIcon(
+  <>
+    <rect x={5.5} y={11} width={13} height={9} rx={2} />
+    <path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
+    <circle cx={12} cy={15.5} r={1.2} />
+  </>
+);
+
+export const ShieldSolid = createIcon(
+  <path d="M12 2l7 3v6c0 5.25-3.5 9.5-7 11-3.5-1.5-7-5.75-7-11V5l7-3z" />
+);
+
+export const Phone = createIcon(
+  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+);
+
+export const Mail = createIcon(
+  <>
+    <rect width={20} height={16} x={2} y={4} rx={2} />
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+  </>
+);
+
+export const Plus = createIcon(<path d="M5 12h14M12 5v14" />);
+
+export const SearchIcon = createIcon(
+  <>
+    <circle cx={11} cy={11} r={8} />
+    <path d="m21 21-4.35-4.35" />
+  </>
+);
+
+export const Bell = createIcon(
+  <>
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </>
+);
