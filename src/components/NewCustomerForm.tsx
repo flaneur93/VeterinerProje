@@ -76,6 +76,98 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
   const [addressErrors, setAddressErrors] = React.useState<Partial<Record<keyof AddressForm, string>>>({});
   const [addresses, setAddresses] = React.useState<SavedAddress[]>([]);
 
+  // Yeni Hasta ekleme icin durumlar (geri yüklendi)
+  const [patientModalOpen, setPatientModalOpen] = React.useState(false);
+  const initialPatient = {
+    name: "",
+    chipNo: "",
+    species: "",
+    breed: "bilinmiyor",
+    gender: "",
+    hybridStatus: "bilinmiyor",
+    color: "",
+    neuterStatus: "bilinmiyor",
+    birthDate: "",
+    bloodGroup: "bilinmiyor",
+    mate: "bilinmiyor",
+    adopt: "bilinmiyor",
+    weight: "",
+  };
+  type PatientForm = typeof initialPatient;
+  type SavedPatient = PatientForm & { id: string };
+  const [patientForm, setPatientForm] = React.useState<PatientForm>(initialPatient);
+  const [patientErrors, setPatientErrors] = React.useState<Partial<Record<keyof PatientForm, string>>>({});
+  const [patients, setPatients] = React.useState<SavedPatient[]>([]);
+  const patientSpeciesOptions = [
+    { value: "kedi", label: "Kedi" },
+    { value: "kopek", label: "Köpek" },
+    { value: "kus", label: "Kuş" },
+  ];
+  const patientBreedOptions: Record<string, { value: string; label: string }[]> = {
+    kedi: [
+      { value: "tekir", label: "Tekir" },
+      { value: "british", label: "British Shorthair" },
+      { value: "scottish", label: "Scottish Fold" },
+      { value: "van", label: "Van Kedisi" },
+      { value: "persian", label: "Persian" },
+    ],
+    kopek: [
+      { value: "golden", label: "Golden Retriever" },
+      { value: "german", label: "Alman Kurdu" },
+      { value: "poodle", label: "Poodle" },
+      { value: "terrier", label: "Terrier" },
+    ],
+    kus: [
+      { value: "muhabbet", label: "Muhabbet Kuşu" },
+      { value: "kanarya", label: "Kanarya" },
+      { value: "papagan", label: "Papağan" },
+    ],
+  };
+  const genderOptionsPet = [
+    { value: "erkek", label: "Erkek" },
+    { value: "disi", label: "Dişi" },
+    { value: "bilinmiyor", label: "Bilinmiyor" },
+  ];
+  const hybridStatusOptions = [
+    { value: "bilinmiyor", label: "Bilinmiyor" },
+    { value: "safkan", label: "Safkan" },
+    { value: "melez", label: "Melez" },
+  ];
+  const colorOptions = [
+    { value: "siyah", label: "Siyah" },
+    { value: "beyaz", label: "Beyaz" },
+    { value: "kahverengi", label: "Kahverengi" },
+    { value: "gri", label: "Gri" },
+    { value: "sari", label: "Sarı" },
+    { value: "karisik", label: "Karışık" },
+  ];
+  const neuterStatusOptions = [
+    { value: "bilinmiyor", label: "Bilinmiyor" },
+    { value: "kisir", label: "Kısır" },
+    { value: "degil", label: "Değil" },
+  ];
+  const bloodGroupOptions = [
+    { value: "A", label: "A" },
+    { value: "B", label: "B" },
+    { value: "AB", label: "AB" },
+    { value: "dea11p", label: "DEA 1.1 +" },
+    { value: "dea11n", label: "DEA 1.1 -" },
+    { value: "bilinmiyor", label: "Bilinmiyor" },
+  ];
+  const yesNoOptions = [
+    { value: "bilinmiyor", label: "Bilinmiyor" },
+    { value: "evet", label: "Evet" },
+    { value: "hayir", label: "Hayır" },
+  ];
+  const breedList = [{ value: "bilinmiyor", label: "Bilinmiyor" }, ...(patientForm.species ? patientBreedOptions[patientForm.species] ?? [] : [])];
+  const sanitizeChipNo = (value: string) => value.replace(/\D/g, "").slice(0, 15);
+  const sanitizeWeight = (value: string) => {
+    const v = value.replace(",", ".").replace(/[^0-9.]/g, "");
+    const parts = v.split(".");
+    if (parts.length <= 2) return v;
+    return parts[0] + "." + parts.slice(1).join("");
+  };
+
   const provinceOptions = [
     { value: "istanbul", label: "Istanbul" },
     { value: "ankara", label: "Ankara" },
@@ -614,19 +706,11 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
           </section>
 
           <div className="relative">
-            <div className={`space-y-6 transition ${addressModalOpen ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen}>
+            <div className={`space-y-6 transition ${(addressModalOpen || patientModalOpen) ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen || patientModalOpen}>
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Adres</BubbleHeader>
-                <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
-                  <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
-                    <span className="font-semibold text-[#5e4b73]">Baslik</span>
-                    <span className="text-[#c3badb]">|</span>
-                    <span className="text-[#8f86a8]">Adres</span>
-                  </div>
-                  <button
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]"
-                    onClick={() => setAddressModalOpen(true)}
-                  >
+                <div className="flex items-center justify-end px-6 pt-6">
+                  <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setAddressModalOpen(true)}>
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
@@ -671,20 +755,57 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
 
               <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Kayitli Hasta</BubbleHeader>
-                <div className="flex items-center justify-between border-b border-[#dcd0eb] px-6 pb-4 pt-6">
-                  <div className="flex items-center gap-4 text-sm font-medium text-[#6f6787]">
-                    <span className="font-semibold text-[#5e4b73]">Cins</span>
-                    <span className="text-[#c3badb]">|</span>
-                    <span className="text-[#8f86a8]">Adi</span>
-                  </div>
-                  <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]">
+                <div className="flex items-center justify-end px-6 pt-6">
+                  <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setPatientModalOpen(true)}>
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="px-6 pt-6">
-                  <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
-                    Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
-                  </div>
+                  {patients.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
+                      Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
+                    </div>
+                  ) : (
+                    <div className="overflow-hidden rounded-2xl border border-[#d9cfeb] bg-white">
+                      <table className="w-full text-sm">
+                        <thead className="bg-[#f7f3ff] text-[#5b5171]">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold">Adı</th>
+                            <th className="px-4 py-3 text-left font-semibold">Cins</th>
+                            <th className="px-4 py-3 text-left font-semibold">Irk</th>
+                            <th className="px-4 py-3 text-left font-semibold">Çip No</th>
+                            <th className="px-3 py-3 text-right font-semibold">&nbsp;</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {patients.map((p) => {
+                            const speciesLabel = patientSpeciesOptions.find((o) => o.value === p.species)?.label ?? (p.species || "");
+                            const breedLabel = p.breed === "bilinmiyor"
+                              ? "Bilinmiyor"
+                              : (patientBreedOptions[p.species]?.find((o) => o.value === p.breed)?.label ?? (p.breed || ""));
+                            return (
+                              <tr key={p.id} className="border-t border-[#ebe4f6] text-[#5b5171]">
+                                <td className="px-4 py-3 font-medium">{p.name}</td>
+                                <td className="px-4 py-3">{speciesLabel}</td>
+                                <td className="px-4 py-3">{breedLabel}</td>
+                                <td className="px-4 py-3">{p.chipNo}</td>
+                                <td className="px-3 py-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPatients((prev) => prev.filter((row) => row.id !== p.id))}
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-[#a988be] transition hover:bg-[#f2ecfc] hover:text-[#7a5fa0]"
+                                    aria-label="Hastayı sil"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </section>
             </div>
@@ -787,6 +908,236 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 </div>
               </div>
             ) : null}
+            {patientModalOpen ? (
+          <div className="absolute inset-0 z-10 flex bg-[#edeff7]">
+            <div className="relative flex h-full w-full flex-col rounded-[32px] border border-[#cdbbe3] bg-white/98 shadow-[0_24px_45px_rgba(182,167,209,0.28)]">
+              <BubbleHeader>Yeni Hasta</BubbleHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-8">
+                <div className="mx-auto flex w-full max-w-md flex-col gap-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Adı</label>
+                      <Input
+                        className={ `${inputClass}${patientErrors.name ? ` ${errorClass}` : ""}` }
+                        placeholder="Hasta Adı"
+                        value={patientForm.name}
+                        onChange={(e) => setPatientForm((prev) => ({ ...prev, name: e.target.value }))}
+                      />
+                      {patientErrors.name ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.name}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Çip No</label>
+                      <Input
+                        className={ `${inputClass}${patientErrors.chipNo ? ` ${errorClass}` : ""}` }
+                        placeholder="15 haneli çip no"
+                        value={patientForm.chipNo}
+                        inputMode="numeric"
+                        onChange={(e) => setPatientForm((prev) => ({ ...prev, chipNo: sanitizeChipNo(e.target.value) }))}
+                      />
+                      {patientErrors.chipNo ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.chipNo}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Cins <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-species"
+                        className={ `${inputClass}${patientErrors.species ? ` ${errorClass}` : ""}` }
+                        value={patientForm.species}
+                        onChange={(val) => {
+                          setPatientForm((prev) => ({ ...prev, species: val, breed: "bilinmiyor" }));
+                          setPatientErrors((prev) => { const next={...prev}; delete next.species; delete next.breed; return next; });
+                        }}
+                        placeholder="Cins secin"
+                        options={patientSpeciesOptions}
+                      />
+                      {patientErrors.species ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.species}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Irk <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-breed"
+                        className={ `${inputClass}${patientErrors.breed ? ` ${errorClass}` : ""}` }
+                        value={patientForm.breed}
+                        onChange={(val) => { setPatientForm((prev) => ({ ...prev, breed: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.breed; return n;}); }}
+                        placeholder={patientForm.species ? "Irk secin" : "Önce cins secin"}
+                        options={breedList}
+                        disabled={!patientForm.species}
+                      />
+                      {patientErrors.breed ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.breed}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Cinsiyet <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-gender"
+                        className={ `${inputClass}${patientErrors.gender ? ` ${errorClass}` : ""}` }
+                        value={patientForm.gender}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, gender: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.gender; return n;}); }}
+                        placeholder="Cinsiyet secin"
+                        options={genderOptionsPet}
+                      />
+                      {patientErrors.gender ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.gender}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Melezlik Durumu <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-hybrid"
+                        className={ `${inputClass}${patientErrors.hybridStatus ? ` ${errorClass}` : ""}` }
+                        value={patientForm.hybridStatus}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, hybridStatus: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.hybridStatus; return n;}); }}
+                        placeholder="Seçiniz"
+                        options={hybridStatusOptions}
+                      />
+                      {patientErrors.hybridStatus ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.hybridStatus}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Renk <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-color"
+                        className={ `${inputClass}${patientErrors.color ? ` ${errorClass}` : ""}` }
+                        value={patientForm.color}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, color: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.color; return n;}); }}
+                        placeholder="Renk secin"
+                        options={colorOptions}
+                      />
+                      {patientErrors.color ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.color}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Kısırlık Durumu <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-neuter"
+                        className={ `${inputClass}${patientErrors.neuterStatus ? ` ${errorClass}` : ""}` }
+                        value={patientForm.neuterStatus}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, neuterStatus: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.neuterStatus; return n;}); }}
+                        placeholder="Seçiniz"
+                        options={neuterStatusOptions}
+                      />
+                      {patientErrors.neuterStatus ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.neuterStatus}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Doğum Tarihi</label>
+                      <IconInput
+                        icon={<Calendar className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b1a5cc]" />}
+                        id="patient-birth"
+                        className={ `${inputClass}${patientErrors.birthDate ? ` ${errorClass}` : ""}` }
+                        value={patientForm.birthDate}
+                        onChange={(e) => setPatientForm((prev)=>({ ...prev, birthDate: formatDateInput(e.target.value) }))}
+                        inputMode="numeric"
+                        placeholder="gg.aa.yyyy"
+                      />
+                      {patientErrors.birthDate ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.birthDate}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Kan Grubu <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-blood"
+                        className={ `${inputClass}${patientErrors.bloodGroup ? ` ${errorClass}` : ""}` }
+                        value={patientForm.bloodGroup}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, bloodGroup: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.bloodGroup; return n;}); }}
+                        placeholder="Seçiniz"
+                        options={bloodGroupOptions}
+                      />
+                      {patientErrors.bloodGroup ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.bloodGroup}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Çiftleştir <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-mate"
+                        className={ `${inputClass}${patientErrors.mate ? ` ${errorClass}` : ""}` }
+                        value={patientForm.mate}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, mate: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.mate; return n;}); }}
+                        placeholder="Seçiniz"
+                        options={yesNoOptions}
+                      />
+                      {patientErrors.mate ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.mate}</p>) : null}
+                    </div>
+                    <div>
+                      <label className={labelClass}>Sahiplendir <span className="text-[#c45a71]">**</span></label>
+                      <ThemedSelect
+                        id="patient-adopt"
+                        className={ `${inputClass}${patientErrors.adopt ? ` ${errorClass}` : ""}` }
+                        value={patientForm.adopt}
+                        onChange={(val) => { setPatientForm((prev)=>({ ...prev, adopt: val })); setPatientErrors((prev)=>{const n={...prev}; delete n.adopt; return n;}); }}
+                        placeholder="Seçiniz"
+                        options={yesNoOptions}
+                      />
+                      {patientErrors.adopt ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.adopt}</p>) : null}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={labelClass}>Kilo (kg)</label>
+                      <Input
+                        className={ `${inputClass}${patientErrors.weight ? ` ${errorClass}` : ""}` }
+                        placeholder="Örn. 4.5"
+                        value={patientForm.weight}
+                        inputMode="decimal"
+                        onChange={(e) => setPatientForm((prev)=>({ ...prev, weight: sanitizeWeight(e.target.value) }))}
+                      />
+                      {patientErrors.weight ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.weight}</p>) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-[#dcd0eb] px-6 py-4">
+                <div className="flex justify-center gap-3">
+                  <Button className="px-8" onClick={() => {
+                    const sanitized: PatientForm = {
+                      name: sanitizeLetters(patientForm.name).trim(),
+                      chipNo: sanitizeChipNo(patientForm.chipNo),
+                      species: patientForm.species.trim(),
+                      breed: patientForm.breed.trim(),
+                      gender: patientForm.gender.trim(),
+                      hybridStatus: patientForm.hybridStatus.trim(),
+                      color: patientForm.color.trim(),
+                      neuterStatus: patientForm.neuterStatus.trim(),
+                      birthDate: patientForm.birthDate.trim(),
+                      bloodGroup: patientForm.bloodGroup.trim(),
+                      mate: patientForm.mate.trim(),
+                      adopt: patientForm.adopt.trim(),
+                      weight: sanitizeWeight(patientForm.weight).trim(),
+                    };
+                    const errs: Partial<Record<keyof PatientForm, string>> = {};
+                    if (!sanitized.species) errs.species = "Cins secin.";
+                    if (!sanitized.breed) errs.breed = "Irk secin.";
+                    if (!sanitized.gender) errs.gender = "Cinsiyet secin.";
+                    if (!sanitized.hybridStatus) errs.hybridStatus = "Melezlik durumu secin.";
+                    if (!sanitized.color) errs.color = "Renk secin.";
+                    if (!sanitized.neuterStatus) errs.neuterStatus = "Kısırlık durumu secin.";
+                    if (!sanitized.bloodGroup) errs.bloodGroup = "Kan grubu secin.";
+                    if (!sanitized.mate) errs.mate = "Çiftleştir secin.";
+                    if (!sanitized.adopt) errs.adopt = "Sahiplendir secin.";
+                    if (Object.keys(errs).length) { setPatientErrors(errs); return; }
+                    const newPatient: SavedPatient = { ...sanitized, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` };
+                    setPatients((prev) => [...prev, newPatient]);
+                    setPatientErrors({});
+                    setPatientForm(() => ({ ...initialPatient }));
+                    setPatientModalOpen(false);
+                  }}>
+                    Kaydet
+                  </Button>
+                  <Button variant="outline" className="px-8" onClick={() => { setPatientModalOpen(false); setPatientErrors({}); }}>
+                    Iptal
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
           </div>
         </div>
 
