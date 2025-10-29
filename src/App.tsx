@@ -27,6 +27,7 @@ import {
 } from "@/icons/lucide";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Input from "@/components/ui/input";
 import SettingsPanel from "@/components/SettingsPanel";
 import NewCustomerForm from "@/components/NewCustomerForm";
 import WorkspaceHeader from "@/components/WorkspaceHeader";
@@ -235,11 +236,10 @@ type ModalProps = {
 
 function Modal({ open, onClose, title, children }: ModalProps) {
   if (!open) return null;
-  const root = typeof document !== "undefined" ? document.getElementById("modal-root") : null;
-  if (!root) return null;
+  if (typeof document === "undefined") return null;
   return createPortal(
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="max-h-[90vh] w-[min(960px,90vw)] overflow-hidden rounded-2xl border border-[#C9C6D6] bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+      <div className="max-h-[90vh] w-[min(960px,90vw)] overflow-hidden rounded-2xl border border-[#C9C6D6] bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-[#E0E1E6] px-4 py-3">
           <div className="text-sm font-semibold">{title ?? "Pencere"}</div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Kapat">
@@ -249,7 +249,7 @@ function Modal({ open, onClose, title, children }: ModalProps) {
         <div className="max-h-[calc(90vh-48px)] overflow-auto p-0 text-sm text-[#565e6c]">{children ?? "İçerik gelecek"}</div>
       </div>
     </div>,
-    root
+    document.body
   );
 }
 
@@ -1332,8 +1332,21 @@ export default function App() {
         <main className="relative flex min-h-0 flex-col">
           <div className="flex-1 p-0">
             <div className="h-full w-full bg-white p-4">
-              <div id="workspace" className="h-full w-full rounded-2xl border border-[#E0E1E6] bg-[#dee1e6] overflow-hidden">
-                <WorkspaceHeader />
+              <div id="workspace" className="h-full w-full rounded-2xl border border-[#E0E1E6] bg-[#dee1e6] overflow-hidden flex flex-col">
+                {workspaceView !== "settings" ? (
+                  <WorkspaceHeader onSearch={() => {
+                    setModal({ open: true, title: "Arama" });
+                    setModalContent(
+                      <div className="p-6">
+                        <div className="mx-auto w-[min(640px,90vw)]">
+                          <Input placeholder="Site genelinde ara..." className="h-12 text-base" />
+                          <div className="mt-3 text-xs text-[#9AA0AE]">Enter ile ara, ESC veya boşluğa tıklayınca kapanır.</div>
+                        </div>
+                      </div>
+                    );
+                  }} />
+                ) : null}
+                <div className="flex-1 min-h-0 overflow-auto">
                 {workspaceView === "settings" ? (
                   <SettingsPanel
                     selectedKey={settingsKey}
@@ -1369,9 +1382,10 @@ export default function App() {
                 ) : workspaceView === "ilac-takip" ? (
                   <IlacTakipPage />
                 ) : null}
+                </div>
               </div>
             </div>
-            <div id="modal-root" className={`absolute inset-0 ${modal.open ? "" : "pointer-events-none"}`} />
+            {null}
             <Modal
               open={modal.open}
               title={modal.title}
