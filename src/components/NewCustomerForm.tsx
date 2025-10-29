@@ -549,14 +549,11 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
-          <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 p-8 shadow-[0_24px_45px_rgba(182,167,209,0.2)]">
+      <div className="flex-1 overflow-y-auto px-8 pt-8 pb-6">
+        <div className="grid h-full items-stretch gap-6 xl:grid-cols-[1.08fr,0.92fr]">
+          <section className="relative h-full rounded-[32px] border border-[#cdbbe3] bg-white/95 shadow-[0_24px_45px_rgba(182,167,209,0.2)] flex flex-col min-h-0">
             <BubbleHeader>Yeni Musteri Kayit</BubbleHeader>
-            <div className="mb-6 flex justify-end">
-              <Users className="h-5 w-5 text-[#8c74c0]" />
-            </div>
-            <div className="space-y-6">
+            <div className="flex-1 min-h-0 px-8 pt-8 pb-6 space-y-6">
               <div>
                 <label className={labelClass} htmlFor={identityInputId}>
                   {identityLabel} <span className="text-[#c45a71]">*</span>
@@ -664,7 +661,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[1fr_1fr_0.9fr]">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className={labelClass} htmlFor={contactNameId}>
                     Yetkili Ad Soyad
@@ -679,16 +676,16 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                   <Input id={contactGsmId} className={inputClassFor("contactGsm")} placeholder="5XX XXX XX XX" value={form.contactGsm} inputMode="numeric" onChange={(e) => updateField("contactGsm", limitDigits(e.target.value, 10))} />
                   {errorText("contactGsm")}
                 </div>
-                <div className="rounded-2xl border border-[#d9cfeb] bg-[#f8f6fe] px-4 py-3">
+                <div className="sm:col-span-2 rounded-2xl border border-[#d9cfeb] bg-[#f8f6fe] px-4 py-3">
                   <span className="block text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6f6787]">
                     Iletisim Tercihi
                   </span>
-                  <div className="mt-3 space-y-2 text-sm text-[#5b5171]">
-                    <label className="flex items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-[#5b5171]">
+                    <label className="inline-flex items-center gap-2">
                       <input type="checkbox" className="h-4 w-4 rounded border-[#cdbbe3] accent-[#8c74c0]" />
                       E-mail
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-2">
                       <input type="checkbox" className="h-4 w-4 rounded border-[#cdbbe3] accent-[#8c74c0]" />
                       SMS
                     </label>
@@ -696,18 +693,25 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 </div>
               </div>
 
-              <div>
-                <label className={labelClass} htmlFor={noteInputId}>
-                  Not
-                </label>
-                <Textarea id={noteInputId} className={textareaClassFor("note")} placeholder="Not ekleyin..." value={form.note} onChange={(e) => updateField("note", e.target.value)} />
+            </div>
+            <div className="border-t border-[#dcd0eb] px-6 py-4">
+              <div className="flex justify-center gap-3">
+                <Button className="px-8" onClick={() => handleSubmit("save")}>
+                  Kaydet
+                </Button>
+                <Button className="px-8" onClick={() => handleSubmit("save-new")}>
+                  Kaydet ve Yeni Muayene
+                </Button>
+                <Button variant="outline" className="px-8" onClick={onClose}>
+                  Iptal
+                </Button>
               </div>
             </div>
           </section>
 
-          <div className="relative">
+          <div className="relative h-full">
             <div className={`space-y-6 transition ${(addressModalOpen || patientModalOpen) ? "pointer-events-none opacity-0" : ""}`} aria-hidden={addressModalOpen || patientModalOpen}>
-              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
+              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-6 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Adres</BubbleHeader>
                 <div className="flex items-center justify-end px-6 pt-1">
                   <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setAddressModalOpen(true)}>
@@ -753,7 +757,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 </div>
               </section>
 
-              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-8 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
+              <section className="relative rounded-[32px] border border-[#cdbbe3] bg-white/95 pt-8 pb-6 shadow-[0_20px_40px_rgba(182,167,209,0.18)]">
             <BubbleHeader>Kayitli Hasta</BubbleHeader>
                 <div className="flex items-center justify-end px-6 pt-1">
                   <button className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8c74c0] text-white transition hover:bg-[#7b64a9]" onClick={() => setPatientModalOpen(true)}>
@@ -762,9 +766,9 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                 </div>
                 <div className="px-6 pt-6">
                   {patients.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
-                      Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
-                    </div>
+                  <div className="rounded-2xl border border-dashed border-[#d9cfeb] bg-[#fbf9ff] px-6 py-6 text-sm leading-relaxed text-[#9a92b5]">
+                    Kayitli hasta bulunmuyor. Yeni hasta eklemek icin artiya tiklayin.
+                  </div>
                   ) : (
                     <div className="overflow-hidden rounded-2xl border border-[#d9cfeb] bg-white">
                       <table className="w-full text-sm">
@@ -935,8 +939,8 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                         onChange={(e) => setPatientForm((prev) => ({ ...prev, chipNo: sanitizeChipNo(e.target.value) }))}
                       />
                       {patientErrors.chipNo ? (<p className="mt-1 text-xs font-medium text-[#d46a6a]">{patientErrors.chipNo}</p>) : null}
-                    </div>
-                  </div>
+          </div>
+        </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
@@ -1128,11 +1132,11 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
                     setPatientForm(() => ({ ...initialPatient }));
                     setPatientModalOpen(false);
                   }}>
-                    Kaydet
-                  </Button>
+            Kaydet
+          </Button>
                   <Button variant="outline" className="px-8" onClick={() => { setPatientModalOpen(false); setPatientErrors({}); }}>
-                    Iptal
-                  </Button>
+            Iptal
+          </Button>
                 </div>
               </div>
             </div>
@@ -1141,27 +1145,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
           </div>
         </div>
 
-        <footer className="mt-10 flex flex-wrap justify-center gap-4 rounded-[24px] bg-[#edeff7]/70 px-6 py-4">
-          <Button
-            className="h-12 rounded-full px-10 text-sm font-semibold shadow-[0_12px_26px_rgba(143,118,191,0.35)]"
-            onClick={() => handleSubmit("save")}
-          >
-            Kaydet
-          </Button>
-          <Button
-            className="h-12 rounded-full bg-[#7b64a9] px-10 text-sm font-semibold shadow-[0_12px_26px_rgba(123,100,169,0.45)] hover:bg-[#6b5693]"
-            onClick={() => handleSubmit("save-new")}
-          >
-            Kaydet ve Yeni Muayene
-          </Button>
-          <Button
-            variant="outline"
-            className="h-12 rounded-full border-[#cdbbe3] bg-white px-10 text-sm font-semibold text-[#6d6486] hover:border-[#bba3d6] hover:bg-[#f6f3fc]"
-            onClick={onClose}
-          >
-            Iptal
-          </Button>
-        </footer>
+        
       </div>
     </div>
   );
