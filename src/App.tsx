@@ -239,7 +239,7 @@ function Modal({ open, onClose, title, children }: ModalProps) {
   if (typeof document === "undefined") return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="max-h-[90vh] w-[min(960px,90vw)] overflow-hidden rounded-2xl border border-[#C9C6D6] bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="-mt-8 max-h-[90vh] w-[90vw] max-w-[700px] overflow-hidden rounded-2xl border border-[#C9C6D6] bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-[#E0E1E6] px-4 py-3">
           <div className="text-sm font-semibold">{title ?? "Pencere"}</div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Kapat">
@@ -1338,8 +1338,8 @@ export default function App() {
                     setModal({ open: true, title: "Arama" });
                     setModalContent(
                       <div className="p-6">
-                        <div className="mx-auto w-[min(640px,90vw)]">
-                          <Input placeholder="Site genelinde ara..." className="h-12 text-base" />
+                        <div className="mx-auto w-full">
+                          <Input placeholder="Site genelinde ara..." className="h-12 w-full text-base border-transparent focus:border-transparent focus:ring-0 outline-none shadow-none" />
                           <div className="mt-3 text-xs text-[#9AA0AE]">Enter ile ara, ESC veya boşluğa tıklayınca kapanır.</div>
                         </div>
                       </div>
