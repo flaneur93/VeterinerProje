@@ -526,28 +526,7 @@ export default function NewCustomerForm({ onClose }: NewCustomerFormProps) {
 
   return (
     <div className="flex h-full flex-col bg-[#edf0f8]">
-      <header className="flex items-center justify-end border-b border-[#d7caed] bg-white/80 px-8 py-4 backdrop-blur">
-        <div className="flex items-center gap-3 text-[#7a7295]">
-          <button
-            aria-label="Paneli Izgara Gorunumune Al"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dcd0eb] bg-white/90 shadow-[0_6px_14px_rgba(195,182,216,0.35)] transition hover:bg-[#f5f2fb]"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button
-            aria-label="Kayitlarda Ara"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dcd0eb] bg-white/90 shadow-[0_6px_14px_rgba(195,182,216,0.35)] transition hover:bg-[#f5f2fb]"
-          >
-            <SearchIcon className="h-4 w-4" />
-          </button>
-          <button
-            aria-label="Bildirimler"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dcd0eb] bg-white/90 shadow-[0_6px_14px_rgba(195,182,216,0.35)] transition hover:bg-[#f5f2fb]"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
-        </div>
-      </header>
+      {null /* header taşındı: WorkspaceHeader */}
 
       <div className="flex-1 overflow-y-auto px-8 pt-8 pb-6">
         <div className="grid h-full items-stretch gap-6 xl:grid-cols-[1.08fr,0.92fr]">

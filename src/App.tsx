@@ -29,6 +29,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SettingsPanel from "@/components/SettingsPanel";
 import NewCustomerForm from "@/components/NewCustomerForm";
+import WorkspaceHeader from "@/components/WorkspaceHeader";
+import {
+  HastaKabulPage,
+  BelgeEklePage,
+  OnlineRandevularPage,
+  MuayenelerPage,
+  YatanHastaPage,
+  KayitlarPage,
+  TakvimPage,
+  StoklarPage,
+  LabIstekleriPage,
+  FinansalDurumPage,
+  RaporlarPage,
+  AsiTakipPage,
+  IlacTakipPage,
+} from "@/pages";
 
 const reminders = [
   { id: 1, patientId: "11158", time: "08:00 - 09:00 AM", room: "Room 01" },
@@ -1189,7 +1205,8 @@ export default function App() {
   const userBtnRef = React.useRef<HTMLDivElement | null>(null);
   const userMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [modalContent, setModalContent] = React.useState<React.ReactNode | undefined>(undefined);
-  const [workspaceView, setWorkspaceView] = React.useState<null | "settings" | "new-customer">(null);
+  type WorkspaceView = MenuKey | "settings";
+  const [workspaceView, setWorkspaceView] = React.useState<WorkspaceView>("hasta-kabul");
   const [settingsKey, setSettingsKey] = React.useState<string>("security");
 
   React.useEffect(() => {
@@ -1297,7 +1314,7 @@ export default function App() {
                   collapsed={collapsed}
                   onClick={(key) => {
                     setActiveMenuKey(key);
-                    if (key === "yeni-musteri") setWorkspaceView("new-customer");
+                    setWorkspaceView(key);
                   }}
                 />
               ))}
@@ -1316,16 +1333,42 @@ export default function App() {
           <div className="flex-1 p-0">
             <div className="h-full w-full bg-white p-4">
               <div id="workspace" className="h-full w-full rounded-2xl border border-[#E0E1E6] bg-[#dee1e6] overflow-hidden">
+                <WorkspaceHeader />
                 {workspaceView === "settings" ? (
                   <SettingsPanel
                     selectedKey={settingsKey}
                     onSelect={setSettingsKey}
-                    onClose={() => setWorkspaceView(null)}
+                    onClose={() => setWorkspaceView("hasta-kabul")}
                   />
+                ) : workspaceView === "yeni-musteri" ? (
+                  <NewCustomerForm onClose={() => setWorkspaceView("hasta-kabul")} />
+                ) : workspaceView === "hasta-kabul" ? (
+                  <HastaKabulPage />
+                ) : workspaceView === "belge-ekle" ? (
+                  <BelgeEklePage />
+                ) : workspaceView === "online-randevular" ? (
+                  <OnlineRandevularPage />
+                ) : workspaceView === "muayeneler" ? (
+                  <MuayenelerPage />
+                ) : workspaceView === "yatan-hasta" ? (
+                  <YatanHastaPage />
+                ) : workspaceView === "kayitlar" ? (
+                  <KayitlarPage />
+                ) : workspaceView === "takvim" ? (
+                  <TakvimPage />
+                ) : workspaceView === "stoklar" ? (
+                  <StoklarPage />
+                ) : workspaceView === "lab-istekleri" ? (
+                  <LabIstekleriPage />
+                ) : workspaceView === "finansal-durum" ? (
+                  <FinansalDurumPage />
+                ) : workspaceView === "raporlar" ? (
+                  <RaporlarPage />
+                ) : workspaceView === "asi-takip" ? (
+                  <AsiTakipPage />
+                ) : workspaceView === "ilac-takip" ? (
+                  <IlacTakipPage />
                 ) : null}
-                 {workspaceView === "new-customer" ? (
-                   <NewCustomerForm onClose={() => setWorkspaceView(null)} />
-                 ) : null}
               </div>
             </div>
             <div id="modal-root" className={`absolute inset-0 ${modal.open ? "" : "pointer-events-none"}`} />
